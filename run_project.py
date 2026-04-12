@@ -20,6 +20,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
+from agents.docx_agent import SYSTEM_PROMPT as DOCX_AGENT_PROMPT
+from agents.docx_agent import DocxAgent
+from agents.file_processor_agent import SYSTEM_PROMPT as FILE_PROCESSOR_PROMPT
+from agents.file_processor_agent import FileProcessorAgent
 from agents.git_agent import SYSTEM_PROMPT as GIT_AGENT_PROMPT
 from agents.git_agent import GitAgent
 from agents.orchestrator_agent import SYSTEM_PROMPT as ORCHESTRATOR_PROMPT
@@ -40,6 +44,8 @@ from agents.specialized_agents import (
 )
 from agents.ui_agent import SYSTEM_PROMPT as UI_AGENT_PROMPT
 from agents.ui_agent import UIAgent
+from agents.vision_agent import SYSTEM_PROMPT as VISION_AGENT_PROMPT
+from agents.vision_agent import VisionAgent
 from src.config.settings import settings
 from src.models.agent import AgentConfig, AgentType, Task
 
@@ -62,6 +68,9 @@ AGENT_REGISTRY: dict[AgentType, tuple[type, str, str]] = {
     AgentType.PROJECT_INIT:   (ProjectInitAgent,    PROJECT_INIT_PROMPT,   "Project Init Agent"),
     AgentType.SKILL:          (SkillAgent,          SKILL_AGENT_PROMPT,    "Skill Agent"),
     AgentType.UI:             (UIAgent,             UI_AGENT_PROMPT,       "UI Agent"),
+    AgentType.VISION:         (VisionAgent,         VISION_AGENT_PROMPT,   "Vision Agent"),
+    AgentType.FILE_PROCESSOR: (FileProcessorAgent,  FILE_PROCESSOR_PROMPT, "File Processor Agent"),
+    AgentType.DOCX:           (DocxAgent,           DOCX_AGENT_PROMPT,     "Docx Agent"),
 }
 
 # Prompt parsujący plik MD → lista zadań
