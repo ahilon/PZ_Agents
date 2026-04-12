@@ -1,7 +1,8 @@
 """Agent models and base classes"""
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class AgentType(str, Enum):
@@ -12,6 +13,7 @@ class AgentType(str, Enum):
     RESEARCHER = "researcher"
     ANALYST = "analyst"
     GIT = "git"
+    PROJECT_INIT = "project_init"
     CUSTOM = "custom"
 
 

@@ -20,23 +20,25 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-from src.config.settings import settings
-from src.models.agent import AgentConfig, AgentType, Task
+from src.agents.git_agent import GitAgent
 from src.agents.orchestrator_agent import OrchestratorAgent
+from src.agents.project_init_agent import ProjectInitAgent
 from src.agents.specialized_agents import (
+    AnalystAgent,
     CodeGeneratorAgent,
     ResearcherAgent,
     TaskExecutorAgent,
-    AnalystAgent,
 )
-from src.agents.git_agent import GitAgent
+from src.config.settings import settings
+from src.models.agent import AgentConfig, AgentType, Task
 from src.prompts import (
-    ORCHESTRATOR_PROMPT,
+    ANALYST_PROMPT,
     CODE_GENERATOR_PROMPT,
+    GIT_AGENT_PROMPT,
+    ORCHESTRATOR_PROMPT,
+    PROJECT_INIT_PROMPT,
     RESEARCHER_PROMPT,
     TASK_EXECUTOR_PROMPT,
-    ANALYST_PROMPT,
-    GIT_AGENT_PROMPT,
 )
 
 load_dotenv()
@@ -55,6 +57,7 @@ AGENT_REGISTRY: dict[AgentType, tuple[type, str, str]] = {
     AgentType.TASK_EXECUTOR:  (TaskExecutorAgent,   TASK_EXECUTOR_PROMPT,  "Task Executor"),
     AgentType.ANALYST:        (AnalystAgent,        ANALYST_PROMPT,        "Analyst"),
     AgentType.GIT:            (GitAgent,            GIT_AGENT_PROMPT,      "Git Agent"),
+    AgentType.PROJECT_INIT:   (ProjectInitAgent,    PROJECT_INIT_PROMPT,   "Project Init Agent"),
 }
 
 # Prompt parsujący plik MD → lista zadań
