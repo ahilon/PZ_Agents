@@ -171,6 +171,17 @@ def read_context_files(root: Path) -> str:
 # OpenAI-powered README generator
 # ---------------------------------------------------------------------------
 
+def _strip_code_fence(text: str) -> str:
+    """Usuwa ```markdown ... ``` jeśli model owinął output blokiem kodu."""
+    text = text.strip()
+    if text.startswith("```"):
+        # Usuń pierwszą linię (```markdown lub ```)
+        text = text.split("\n", 1)[1] if "\n" in text else ""
+        # Usuń zamykający ```
+        if text.rstrip().endswith("```"):
+            text = text.rstrip()[:-3].rstrip()
+    return text
+
 
 def build_user_prompt(
     structure: str,
@@ -239,7 +250,7 @@ async def generate_readme(
         temperature=0.4,
         max_tokens=4096,
     )
-    return response.choices[0].message.content or ""
+    return _strip_code_fence(response.choices[0].message.content or "")
 
 
 def build_initial_prompt(structure: str, source_context: str, output_file: str) -> str:
@@ -281,7 +292,7 @@ async def generate_initial_readme(
         temperature=0.3,
         max_tokens=4096,
     )
-    return response.choices[0].message.content or ""
+    return _strip_code_fence(response.choices[0].message.content or "")
 
 
 # ---------------------------------------------------------------------------
