@@ -16,6 +16,9 @@ class AgentType(str, Enum):
     PROJECT_INIT = "project_init"
     SKILL = "skill"
     UI = "ui"
+    VISION = "vision"
+    FILE_PROCESSOR = "file_processor"
+    DOCX = "docx"
     CUSTOM = "custom"
 
 
