@@ -57,7 +57,7 @@ git push -u origin main
 | — Required approvals | `1` | Co najmniej 1 osoba musi zatwierdzić PR |
 | — Dismiss stale pull request approvals | ✅ | Nowy commit w PR kasuje poprzednie zatwierdzenia |
 | — Require review from Code Owners | ❌ (opcjonalne) | Tylko jeśli masz plik `CODEOWNERS` |
-| **Require status checks to pass** | ❌ / ✅ | Włącz jeśli masz CI (GitHub Actions, testy) |
+| **Require status checks to pass** | ✅ | Włącz — mamy CI z pylint + isort |
 | **Require signed commits** | ❌ (opcjonalne) | Włącz jeśli chcesz weryfikacji GPG |
 
 ### 3.3 Bypass list (kto może ominąć reguły)
@@ -144,7 +144,40 @@ Twój lokalny main (aktualny)
 
 ---
 
-## 8. Checklist — nowe repo
+## 8. GitHub Actions CI — pylint + isort
+
+Plik `.github/workflows/quality.yml` uruchamia się automatycznie przy każdym pushu i PR do `main`.
+
+**Co sprawdza:**
+- `isort --check-only src/` — czy importy są posortowane
+- `pylint src/ --fail-under=7.0` — czy pylint score ≥ 7.0
+
+**Konfiguracja status check (po pierwszym uruchomieniu workflow):**
+
+1. **Settings → Branches** → edytuj ruleset `protect-main`
+2. W sekcji **Require status checks to pass** kliknij `Add checks`
+3. Wyszukaj: `pylint + isort` (nazwa jobu z workflow)
+4. Zaznacz `Require branches to be up to date before merging`
+
+> Status check pojawia się na liście dopiero po pierwszym uruchomieniu CI — wypchnij jakikolwiek PR, poczekaj na wynik, potem dodaj go tutaj.
+
+**Zmiana progu pylint** (plik `.github/workflows/quality.yml`):
+```yaml
+- name: pylint
+  run: poetry run pylint src/ --fail-under=8.0   # zmień próg tutaj
+```
+
+**Sekrety GitHub Actions** (jeśli workflow potrzebuje OpenAI):
+> Settings → Secrets and variables → Actions → New repository secret
+
+```
+OPENAI_API_KEY    → klucz API OpenAI
+GIT_BOT_TOKEN     → PAT konta bota (jeśli CI pushuje)
+```
+
+---
+
+## 9. Checklist — nowe repo
 
 ```
 [ ] Repo utworzone bez inicjalizacji (jeśli masz lokalny kod)
@@ -154,10 +187,12 @@ Twój lokalny main (aktualny)
     [ ] Block force pushes ✅
     [ ] Require pull request ✅ (min. 1 approval)
     [ ] Dismiss stale reviews ✅
+    [ ] Require status checks: "pylint + isort" ✅ (po pierwszym CI run)
 [ ] Merge commit wyłączony, Squash merging włączony
 [ ] Automatically delete head branches ✅
 [ ] .gitignore zawiera .env
 [ ] .env.example w repo (bez sekretów)
+[ ] .github/workflows/quality.yml w repo ✅
 [ ] Sekrety dodane w Settings → Secrets (jeśli potrzebne)
 [ ] Bot dodany jako Collaborator (Write) jeśli używany
 ```

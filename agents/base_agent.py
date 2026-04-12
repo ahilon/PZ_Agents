@@ -1,16 +1,16 @@
-"""Base agent class"""
+"""Base agent class."""
 import asyncio
 import logging
 import os
+import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, Optional
-import uuid
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-from src.models.agent import AgentConfig, AgentResponse, Task, AgentState
+from src.models.agent import AgentConfig, AgentResponse, AgentState, Task
 
 load_dotenv()
 
@@ -103,7 +103,6 @@ class BaseAgent(ABC):
     @abstractmethod
     async def _process_task(self, task: Task) -> Any:
         """Logika agenta — implementowana przez podklasy."""
-        pass
 
     async def get_status(self) -> Dict[str, Any]:
         return {
