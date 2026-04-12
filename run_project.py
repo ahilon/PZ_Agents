@@ -30,6 +30,7 @@ from src.agents.specialized_agents import (
     ResearcherAgent,
     TaskExecutorAgent,
 )
+from src.agents.ui_agent import UIAgent
 from src.config.settings import settings
 from src.models.agent import AgentConfig, AgentType, Task
 from src.prompts import (
@@ -41,6 +42,7 @@ from src.prompts import (
     RESEARCHER_PROMPT,
     SKILL_AGENT_PROMPT,
     TASK_EXECUTOR_PROMPT,
+    UI_AGENT_PROMPT,
 )
 
 load_dotenv()
@@ -61,6 +63,7 @@ AGENT_REGISTRY: dict[AgentType, tuple[type, str, str]] = {
     AgentType.GIT:            (GitAgent,            GIT_AGENT_PROMPT,      "Git Agent"),
     AgentType.PROJECT_INIT:   (ProjectInitAgent,    PROJECT_INIT_PROMPT,   "Project Init Agent"),
     AgentType.SKILL:          (SkillAgent,          SKILL_AGENT_PROMPT,    "Skill Agent"),
+    AgentType.UI:             (UIAgent,             UI_AGENT_PROMPT,       "UI Agent"),
 }
 
 # Prompt parsujący plik MD → lista zadań
