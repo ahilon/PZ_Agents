@@ -14,6 +14,7 @@ class AgentType(str, Enum):
     ANALYST = "analyst"
     GIT = "git"
     PROJECT_INIT = "project_init"
+    SKILL = "skill"
     CUSTOM = "custom"
 
 
