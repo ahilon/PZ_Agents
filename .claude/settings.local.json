@@ -4,7 +4,8 @@
       "Bash(poetry run python -c ':*)",
       "Bash(poetry run:*)",
       "Bash(poetry install:*)",
-      "Bash(poetry lock:*)"
+      "Bash(poetry lock:*)",
+      "Bash(python -c \"import run_project; print\\('run_project.py OK'\\)\")"
     ]
   }
 }
