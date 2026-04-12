@@ -9,10 +9,13 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
+from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
 from src.models.agent import Task
 from src.agents.base_agent import BaseAgent
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
