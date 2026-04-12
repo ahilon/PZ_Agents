@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
+import requests
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
@@ -296,10 +297,12 @@ class GitAgent(BaseAgent):
         commit_hash = _run(["git", "rev-parse", "HEAD"], repo_path, token).get("output", "?")
 
         pushed = False
+        remote_url_clean = None
         if push and token:
             remote = _run(["git", "remote", "get-url", "origin"], repo_path, token)
             if remote["success"]:
-                auth_url = _inject_token(remote["output"], bot_name, token)
+                remote_url_clean = remote["output"]
+                auth_url = _inject_token(remote_url_clean, bot_name, token)
                 steps.append(_run(["git", "push", "-u", auth_url, branch], repo_path, token))
                 pushed = steps[-1]["success"]
             else:
@@ -307,19 +310,69 @@ class GitAgent(BaseAgent):
         elif push:
             logger.warning("push=True ale GIT_BOT_TOKEN nie jest ustawiony.")
 
+        # Otwórz PR jeśli push się udał i create_pr=True
+        pr_result: dict = {}
+        create_pr = p.get("create_pr", False)
+        base_branch = p.get("base_branch", "main")
+        if pushed and create_pr and remote_url_clean:
+            parsed = self._parse_repo(remote_url_clean)
+            if parsed:
+                owner, repo_name = parsed
+                pr_body = p.get("pr_body", f"Automatyczny PR z gałęzi `{branch}`.\n\nCommit: `{commit_hash[:8]}`")
+                pr_result = self._open_pr(owner, repo_name, token, branch, base_branch, message, pr_body)
+                if pr_result.get("success"):
+                    logger.info(f"PR otwarty: {pr_result['pr_url']}")
+                else:
+                    logger.warning(f"PR nieudany: {pr_result.get('error')}")
+
+        summary = f"Commit {commit_hash[:8]} na '{branch}'. "
+        if pushed:
+            summary += "Wypchnięto. "
+        if pr_result.get("success"):
+            summary += f"PR #{pr_result['pr_number']}: {pr_result['pr_url']}"
+
         return {
             "mode": "commit", "repo_path": str(repo_path), "branch": branch,
             "commit_hash": commit_hash, "commit_message": message,
             "files_committed": self._committed_files(repo_path, token),
-            "remote_url": None, "pushed": pushed,
+            "remote_url": remote_url_clean, "pushed": pushed,
+            "pr": pr_result,
             "bot_name": bot_name, "bot_email": bot_email,
             "steps": steps,
-            "summary": (
-                f"Commit {commit_hash[:8]} na '{branch}'. "
-                f"{'Wypchnięto na remote.' if pushed else 'Nie wypchnięto.'}"
-            ),
+            "summary": summary.strip(),
             "status": "completed",
         }
+
+    # ------------------------------------------------------------------
+    # Pull Request
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _parse_repo(remote_url: str) -> tuple[str, str] | None:
+        """Wyciąga (owner, repo) z URL remote git."""
+        # https://github.com/owner/repo.git  lub  git@github.com:owner/repo.git
+        m = re.search(r"github\.com[:/]([^/]+)/([^/.]+)", remote_url)
+        return (m.group(1), m.group(2)) if m else None
+
+    @staticmethod
+    def _open_pr(owner: str, repo: str, token: str, head: str,
+                 base: str, title: str, body: str) -> dict:
+        """Tworzy Pull Request przez GitHub API."""
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
+        resp = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            json={"title": title, "body": body, "head": head, "base": base},
+            timeout=15,
+        )
+        if resp.status_code == 201:
+            data = resp.json()
+            return {"success": True, "pr_url": data["html_url"], "pr_number": data["number"]}
+        return {"success": False, "error": f"HTTP {resp.status_code}: {resp.text[:200]}"}
 
     # ------------------------------------------------------------------
     # Helpers
