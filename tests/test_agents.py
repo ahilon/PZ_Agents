@@ -1,12 +1,11 @@
 """Unit tests for agents"""
 import pytest
-import asyncio
+import pytest_asyncio
 from src.models.agent import AgentConfig, AgentType, Task, AgentState
-from src.agents.base_agent import BaseAgent
 from src.agents.orchestrator_agent import OrchestratorAgent
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def orchestrator():
     """Create an orchestrator agent for testing"""
     config = AgentConfig(

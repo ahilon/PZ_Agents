@@ -76,12 +76,16 @@ class OrchestratorAgent(BaseAgent):
         self.task_queue.clear()
 
         results: List[AgentResponse] = await asyncio.gather(
-            *[self._delegate_task(task) for task in tasks_to_run]
+            *[self._delegate_task(task) for task in tasks_to_run],
+            return_exceptions=True,
         )
 
         successful = 0
         failed = 0
         for task, result in zip(tasks_to_run, results):
+            if isinstance(result, Exception):
+                result = AgentResponse(success=False, error=str(result),
+                                       metadata={"task_id": task.id})
             if result.success:
                 self.completed_tasks[task.id] = result
                 successful += 1

@@ -205,6 +205,14 @@ class GitAgent(BaseAgent):
     # Tryb INIT
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _configure_git_identity(repo_path: Path, bot_name: str, bot_email: str, token: str) -> list[dict]:
+        """Konfiguruje tożsamość git dla repozytorium (lokalnie)."""
+        return [
+            _run(["git", "config", "user.name",  bot_name],  repo_path, token),
+            _run(["git", "config", "user.email", bot_email], repo_path, token),
+        ]
+
     def _init_repo(self, task: Task) -> dict:
         p = task.parameters
         repo_path  = Path(p.get("repo_path", ".")).resolve()
@@ -223,10 +231,7 @@ class GitAgent(BaseAgent):
             if not steps[-1]["success"]:
                 return self._fail(steps, "git init nieudany", token)
 
-        steps += [
-            _run(["git", "config", "user.name",  bot_name],  repo_path, token),
-            _run(["git", "config", "user.email", bot_email], repo_path, token),
-        ]
+        steps += self._configure_git_identity(repo_path, bot_name, bot_email, token)
         for f in files:
             steps.append(_run(["git", "add", f], repo_path, token))
 
@@ -278,10 +283,7 @@ class GitAgent(BaseAgent):
         if not _run(["git", "rev-parse", "--is-inside-work-tree"], repo_path, token)["success"]:
             return self._fail(steps, f"Nie jest repozytorium git: {repo_path}", token)
 
-        steps += [
-            _run(["git", "config", "user.name",  bot_name],  repo_path, token),
-            _run(["git", "config", "user.email", bot_email], repo_path, token),
-        ]
+        steps += self._configure_git_identity(repo_path, bot_name, bot_email, token)
 
         steps.append(_run(["git", "checkout", "-b", branch], repo_path, token))
         if not steps[-1]["success"]:
@@ -312,7 +314,7 @@ class GitAgent(BaseAgent):
 
         # Otwórz PR jeśli push się udał i create_pr=True
         pr_result: dict = {}
-        create_pr = p.get("create_pr", False)
+        create_pr = p.get("create_pr", True)
         base_branch = p.get("base_branch", "main")
         if pushed and create_pr and remote_url_clean:
             parsed = self._parse_repo(remote_url_clean)
