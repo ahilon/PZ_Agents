@@ -1,10 +1,11 @@
 """Testy jednostkowe dla BaseAgent."""
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
 
-from src.agents.base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 from src.models.agent import AgentConfig, AgentResponse, AgentState, AgentType, Task
 
 
@@ -53,9 +54,7 @@ class TestBaseAgentExecution:
 
     @pytest.mark.asyncio
     async def test_execute_timeout_returns_error(self, agent, sample_task):
-        import asyncio
-        agent._process_task = AsyncMock(side_effect=asyncio.TimeoutError())
-        with patch("src.agents.base_agent.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with patch("agents.base_agent.asyncio.wait_for", side_effect=asyncio.TimeoutError):
             response = await agent.execute(sample_task)
         assert response.success is False
         assert "timeout" in response.error.lower()
@@ -74,7 +73,7 @@ class TestBaseAgentEdgeCases:
     async def test_execute_without_api_key_still_works(self, agent, sample_task):
         agent._llm = None
         response = await agent.execute(sample_task)
-        assert response.success is True  # _process_task nie woła LLM
+        assert response.success is True
 
     @pytest.mark.asyncio
     async def test_call_llm_without_client_returns_empty(self, agent):
