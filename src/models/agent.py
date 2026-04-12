@@ -48,7 +48,7 @@ class AgentConfig(BaseModel):
     name: str = Field(..., description="Agent name")
     agent_type: AgentType = Field(..., description="Agent type")
     description: str = Field(..., description="Agent description")
-    model: str = Field(default="gpt-4", description="LLM model to use")
+    model: str = Field(default="gpt-4o", description="LLM model to use")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Model temperature")
     max_tokens: int = Field(default=2000, ge=100, description="Maximum tokens")
     system_prompt: Optional[str] = Field(default=None, description="System prompt for the agent")

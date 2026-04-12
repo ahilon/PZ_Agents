@@ -51,11 +51,14 @@ CONTEXT_FILES = [
     "src/agents/base_agent.py",
     "src/agents/orchestrator_agent.py",
     "src/agents/specialized_agents.py",
+    "src/agents/git_agent.py",
     "src/config/settings.py",
+    "src/prompts/__init__.py",
     "src/tools/file_tools.py",
     "src/tools/code_executor.py",
     "tests/test_agents.py",
     "main.py",
+    "run_project.py",
 ]
 
 
