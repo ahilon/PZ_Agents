@@ -1,5 +1,6 @@
 """Vision Agent — analiza obrazów z przepisami przez OpenAI Vision (GPT-4o)."""
 import base64
+import json
 import logging
 import os
 from pathlib import Path
@@ -33,6 +34,13 @@ ustrukturyzowane dane w formacie JSON.
 - Jeśli są dwie wersje (kobieta/mężczyzna) — zapisz obie osobno
 - Jeśli brak danych odżywczych — zwróć null dla tych pól
 
+### Porcje i czas
+- `servings` — ile porcji wychodzi z przepisu (liczba całkowita lub null)
+- `servings_to_make` — ile porcji należy zrobić, jeśli podano (liczba całkowita lub null)
+- `prep_time` — czas samego przygotowania (np. "15 min") lub null
+- `cook_time` — czas obróbki termicznej (np. "30 min") lub null
+- `total_time` — łączny czas (np. "45 min") lub null; jeśli nie podano wprost, zsumuj prep+cook
+
 ### Instrukcja
 - Usuń wszelkie opinie, emocje, dygresje autora
 - Język rzeczowy, bezosobowy ("Pokrój", "Dodaj", nie "Możesz dodać")
@@ -47,6 +55,11 @@ ustrukturyzowane dane w formacie JSON.
   "dish_name": "Nazwa potrawy",
   "has_food_photo": false,
   "has_gender_variants": false,
+  "servings": 4,
+  "servings_to_make": null,
+  "prep_time": "15 min",
+  "cook_time": "30 min",
+  "total_time": "45 min",
   "important_notes": ["nota przed przygotowaniem"],
   "ingredients": [
     {"name": "składnik", "amount": "100g"},
@@ -79,7 +92,7 @@ def _encode_image(path: Path) -> str:
 
 def _mime_type(path: Path) -> str:
     ext = path.suffix.lower()
-    return {"jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+    return {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
             ".webp": "image/webp"}.get(ext, "image/jpeg")
 
 
@@ -88,18 +101,25 @@ class VisionAgent(BaseAgent):
     Analizuje obraz z przepisem i zwraca ustrukturyzowane dane JSON.
 
     Parametry task:
-      image_path   (str)        — ścieżka do pliku obrazu (PNG/JPG/WEBP)
-      image_base64 (str)        — obraz jako base64 (alternatywa dla image_path)
-      mime_type    (str)        — "image/jpeg" | "image/png" (domyślnie: z rozszerzenia)
-      model        (str)        — model OpenAI (domyślnie: gpt-4o)
+      image_path   (str) — ścieżka do pliku obrazu (PNG/JPG/WEBP)
+      image_base64 (str) — obraz jako base64 (alternatywa dla image_path)
+      mime_type    (str) — "image/jpeg" | "image/png" (domyślnie: z rozszerzenia)
+      model        (str) — model OpenAI (domyślnie: gpt-4o)
 
     Zwraca:
       {
         "dish_name": "...",
         "ingredients": [...],
         "nutrition": {...},
+        "nutrition_female": {...} | null,
+        "nutrition_male": {...} | null,
         "instructions": [...],
         "important_notes": [...],
+        "servings": int | null,
+        "servings_to_make": int | null,
+        "prep_time": str | null,
+        "cook_time": str | null,
+        "total_time": str | null,
         "has_food_photo": bool,
         "has_gender_variants": bool,
         "status": "completed"
@@ -112,7 +132,6 @@ class VisionAgent(BaseAgent):
         if not api_key:
             return {"status": "failed", "summary": "Brak OPENAI_API_KEY."}
 
-        # Załaduj obraz
         image_b64 = p.get("image_base64", "")
         mime = p.get("mime_type", "image/jpeg")
 
@@ -157,7 +176,6 @@ class VisionAgent(BaseAgent):
         except Exception as e:
             return {"status": "failed", "summary": f"Błąd API OpenAI: {e}"}
 
-        import json
         raw = response.choices[0].message.content or "{}"
         try:
             data = json.loads(raw)
@@ -165,6 +183,10 @@ class VisionAgent(BaseAgent):
             return {"status": "failed", "summary": f"Błąd parsowania JSON: {raw[:200]}"}
 
         data["status"] = "completed"
-        data["summary"] = f"Wyodrębniono przepis: {data.get('dish_name', '?')} ({len(data.get('ingredients', []))} składników, {len(data.get('instructions', []))} kroków)"
+        data["summary"] = (
+            f"Wyodrębniono przepis: {data.get('dish_name', '?')} "
+            f"({len(data.get('ingredients', []))} składników, "
+            f"{len(data.get('instructions', []))} kroków)"
+        )
         logger.info(f"VisionAgent: {data['summary']}")
         return data
