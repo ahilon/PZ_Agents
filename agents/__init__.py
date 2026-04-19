@@ -12,6 +12,7 @@ from agents.specialized_agents import (
     ResearcherAgent,
     TaskExecutorAgent,
 )
+from agents.trip_planner_agent import TripPlannerAgent
 from agents.ui_agent import UIAgent
 from agents.vision_agent import VisionAgent
 
@@ -29,4 +30,5 @@ __all__ = [
     "VisionAgent",
     "FileProcessorAgent",
     "DocxAgent",
+    "TripPlannerAgent",
 ]
