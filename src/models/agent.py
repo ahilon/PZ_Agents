@@ -19,6 +19,7 @@ class AgentType(str, Enum):
     VISION = "vision"
     FILE_PROCESSOR = "file_processor"
     DOCX = "docx"
+    TRIP_PLANNER = "trip_planner"
     CUSTOM = "custom"
 
 

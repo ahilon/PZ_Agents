@@ -44,6 +44,8 @@ from agents.specialized_agents import (
 )
 from agents.ui_agent import SYSTEM_PROMPT as UI_AGENT_PROMPT
 from agents.ui_agent import UIAgent
+from agents.trip_planner_agent import SYSTEM_PROMPT as TRIP_PLANNER_PROMPT
+from agents.trip_planner_agent import TripPlannerAgent
 from agents.vision_agent import SYSTEM_PROMPT as VISION_AGENT_PROMPT
 from agents.vision_agent import VisionAgent
 from src.config.settings import settings
@@ -71,6 +73,7 @@ AGENT_REGISTRY: dict[AgentType, tuple[type, str, str]] = {
     AgentType.VISION:         (VisionAgent,         VISION_AGENT_PROMPT,   "Vision Agent"),
     AgentType.FILE_PROCESSOR: (FileProcessorAgent,  FILE_PROCESSOR_PROMPT, "File Processor Agent"),
     AgentType.DOCX:           (DocxAgent,           DOCX_AGENT_PROMPT,     "Docx Agent"),
+    AgentType.TRIP_PLANNER:   (TripPlannerAgent,    TRIP_PLANNER_PROMPT,   "Trip Planner Agent"),
 }
 
 # Prompt parsujący plik MD → lista zadań
